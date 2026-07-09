@@ -325,6 +325,12 @@ func (service serviceSend) SendImage(ctx context.Context, request domainSend.Ima
 		FileSHA256:    uploadedImage.FileSHA256,
 		FileLength:    proto.Uint64(uint64(len(dataWaImage))),
 		ViewOnce:      proto.Bool(request.ViewOnce),
+		// Width/Height (aspect ratio) - without these, WhatsApp clients render the
+		// chat-bubble preview box with the wrong aspect ratio (looks cropped) until
+		// the full image loads. srcImage is the original, pre-thumbnail decode, same
+		// pattern already used for StickerMessage above.
+		Width:  proto.Uint32(uint32(srcImage.Bounds().Dx())),
+		Height: proto.Uint32(uint32(srcImage.Bounds().Dy())),
 	}}
 
 	if request.BaseRequest.IsForwarded {
@@ -878,6 +884,10 @@ func (service serviceSend) SendVideo(ctx context.Context, request domainSend.Vid
 		ThumbnailEncSHA256:  dataWaThumbnail,
 		ThumbnailSHA256:     dataWaThumbnail,
 		ThumbnailDirectPath: proto.String(uploaded.DirectPath),
+		// Width/Height (aspect ratio) - same rationale as SendImage above; srcImage
+		// is the full-res frame ffmpeg extracted for the thumbnail, before resize.
+		Width:  proto.Uint32(uint32(srcImage.Bounds().Dx())),
+		Height: proto.Uint32(uint32(srcImage.Bounds().Dy())),
 	}}
 
 	if request.BaseRequest.IsForwarded {
